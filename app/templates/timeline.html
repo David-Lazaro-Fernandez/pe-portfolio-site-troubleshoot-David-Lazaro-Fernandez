@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta property="og:title" content="Personal Portfolio">
+    <meta property="og:description" content="My Personal Portfolio">
+    <meta property="og:url" content="{{ url }}">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+        rel="stylesheet">
+
+    <link lang='sass' rel="stylesheet" href="./static/styles/main.css">
+    <link rel='icon' href='./static/img/favicon.ico' type='image/x-icon' />
+    <title>{{ title }}</title>
+</head>
+
+<body>
+    <header class="nav-bar">
+        <div class="nav-content">
+            <a href="/">
+                <div class="nav-logo">
+                    <img src="./static/img/logo.svg" />
+                </div>
+            </a>
+        </div>
+    </header>
+
+    <div class="profile">
+        <div id="profile-picture" class="profile-picture">
+            <img src="./static/img/logo.jpg">
+        </div>
+        <h1>{{ title }}</h1>
+    </div>
+
+    <form id="add-timeline-post">
+      <input type="text" id="timeline-name" placeholder="Name" required>
+      <input type="email" id="timeline-email" placeholder="Email" required>
+      <input type="text" id="timeline-content" placeholder="Content" required>
+      <button type="submit">Add Timeline Post</button>
+    </form>
+
+    <div class="timeline"></div>
+
+    <script>
+      function populateTimeline() {
+        fetch('/api/timeline_post').then(function(response) {
+          return response.json();
+        }).then(function(data) {
+          document.querySelector('.timeline').innerHTML = data.timeline_posts.map(function(item) {
+            return `
+              <div class="timeline-post">
+                <div class="timeline-post-content">${item.content}</div>
+                <div class="timeline-post-footer">
+                  <small>
+                    <em>
+                      by
+                      <a class="timeline-post-name" href="mailto:${item.email}">${item.name}</a>
+                      <span class="timeline-date">@ ${new Date(item.created_at).toLocaleString()}</span>
+                    </em>
+                  </small>
+                </div>
+              </div>
+            `;
+          }).join('\n');
+        });
+      }
+
+      populateTimeline();
+
+      document.getElementById('add-timeline-post').addEventListener('submit', function addTimelinePost(e) {
+        e.preventDefault();
+
+        var name = document.getElementById('timeline-name').value;
+        var email = document.getElementById('timeline-email').value;
+        var content = document.getElementById('timeline-content').value;
+
+        let formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('content', content);
+
+        fetch('/api/timeline_post', {
+          method: 'POST',
+          body: formData
+        }).then(function(response) {
+          return response.json();
+        }).then(function(data) {
+          document.getElementById('timeline-name').value = '';
+          document.getElementById('timeline-email').value = '';
+          document.getElementById('timeline-content').value = '';
+
+          populateTimeline();
+        });
+      });
+    </script>
+
+    <style>
+      #add-timeline-post {
+        text-align: center;
+      }
+
+      .timeline {
+        text-align: center;
+      }
+
+      .timeline-post {
+        margin-top: 20px;
+      }
+    </style>
+</body>
+</html>
